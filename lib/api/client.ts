@@ -112,6 +112,42 @@ function isBodyInit(body: unknown): body is BodyInit {
   )
 }
 
+function extractValidationDetails(details: unknown): string | null {
+  if (!details || typeof details !== 'object') {
+    return null
+  }
+
+  const messages: string[] = []
+
+  if ('formErrors' in details && Array.isArray(details.formErrors)) {
+    for (const message of details.formErrors) {
+      if (typeof message === 'string' && message.trim()) {
+        messages.push(message.trim())
+      }
+    }
+  }
+
+  if (
+    'fieldErrors' in details &&
+    details.fieldErrors &&
+    typeof details.fieldErrors === 'object'
+  ) {
+    for (const fieldMessages of Object.values(details.fieldErrors)) {
+      if (!Array.isArray(fieldMessages)) {
+        continue
+      }
+
+      for (const message of fieldMessages) {
+        if (typeof message === 'string' && message.trim()) {
+          messages.push(message.trim())
+        }
+      }
+    }
+  }
+
+  return messages.length > 0 ? [...new Set(messages)].join(' ') : null
+}
+
 function extractErrorMessage(payload: unknown): string | null {
   if (typeof payload === 'string' && payload.trim().length > 0) {
     return payload
@@ -119,6 +155,19 @@ function extractErrorMessage(payload: unknown): string | null {
 
   if (!payload || typeof payload !== 'object') {
     return null
+  }
+
+  if (
+    'error' in payload &&
+    payload.error &&
+    typeof payload.error === 'object' &&
+    'details' in payload.error
+  ) {
+    const validationMessage = extractValidationDetails(payload.error.details)
+
+    if (validationMessage) {
+      return validationMessage
+    }
   }
 
   if (

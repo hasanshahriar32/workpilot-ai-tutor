@@ -248,15 +248,14 @@ function normalizeSyllabusDetailResponse(payload: unknown): SyllabusDetailRespon
 }
 
 export async function uploadSyllabusText(payload: UploadSyllabusTextPayload) {
-  const formData = new FormData()
-  formData.set('title', payload.title)
-  formData.set('text', payload.text)
-  formData.set('semester_start_date', payload.semesterStartDate)
-  formData.set('semester_end_date', payload.semesterEndDate)
-
   const response = await apiClient.request<SyllabusUploadResponse>('/api/v1/syllabus/upload/text', {
     method: 'POST',
-    body: formData,
+    body: {
+      title: payload.title,
+      text: payload.text,
+      semester_start_date: payload.semesterStartDate,
+      semester_end_date: payload.semesterEndDate,
+    },
   })
 
   return normalizeUploadResponse(response)
